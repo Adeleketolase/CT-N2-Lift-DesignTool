@@ -1,0 +1,1372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CT N₂ Lift Design Tool</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --bg2: #0f1525;
+    --bg3: #151d30;
+    --bg4: #1c2640;
+    --border: #1e2d4a;
+    --border2: #2a3d5c;
+    --accent: #00d4ff;
+    --accent2: #0099cc;
+    --green: #00e5a0;
+    --amber: #ffb730;
+    --red: #ff4d6a;
+    --text: #e8edf5;
+    --text2: #8a9bb5;
+    --text3: #4a5f7a;
+    --font-head: 'Rajdhani', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* grid bg */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 40px 40px;
+    opacity: 0.3;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .app { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; padding: 0 20px 60px; }
+
+  /* HEADER */
+  header {
+    padding: 28px 0 24px;
+    border-bottom: 1px solid var(--border2);
+    margin-bottom: 32px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .header-title h1 {
+    font-family: var(--font-head);
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--text);
+    text-transform: uppercase;
+    line-height: 1;
+  }
+  .header-title h1 span { color: var(--accent); }
+  .header-sub {
+    font-size: 11px;
+    color: var(--text3);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-top: 6px;
+    font-family: var(--font-mono);
+  }
+  .header-badge {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text3);
+    text-align: right;
+    line-height: 1.8;
+  }
+  .header-badge span { color: var(--accent); }
+
+  /* NAV TABS */
+  .nav-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 28px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0;
+  }
+  .nav-tab {
+    font-family: var(--font-head);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 10px 20px;
+    background: transparent;
+    border: none;
+    color: var(--text3);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    position: relative;
+    top: 1px;
+  }
+  .nav-tab:hover { color: var(--text2); }
+  .nav-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* PANELS */
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* SECTION CARDS */
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+  .card-header {
+    font-family: var(--font-head);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .card-header::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* GRID LAYOUTS */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 16px; }
+  @media(max-width:700px) {
+    .grid-2,.grid-3,.grid-4 { grid-template-columns: 1fr; }
+  }
+
+  /* FORM ELEMENTS */
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label {
+    font-size: 11px;
+    font-family: var(--font-mono);
+    color: var(--text3);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .field label .unit {
+    color: var(--text2);
+    font-size: 10px;
+    margin-left: 4px;
+  }
+  .field input, .field select {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 9px 12px;
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+    width: 100%;
+    -webkit-appearance: none;
+  }
+  .field input:focus, .field select:focus { border-color: var(--accent2); }
+  .field input::placeholder { color: var(--text3); }
+  .field select option { background: var(--bg3); }
+  .field .optional-tag {
+    font-size: 10px;
+    color: var(--text3);
+    font-family: var(--font-mono);
+  }
+
+  /* RESULT BLOCKS */
+  .results-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    margin-top: 4px;
+  }
+  .result-item {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 14px 16px;
+  }
+  .result-item.highlight {
+    background: var(--bg4);
+    border-color: var(--accent);
+  }
+  .result-item.green { border-color: var(--green); }
+  .result-item.amber { border-color: var(--amber); }
+  .result-label {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+  }
+  .result-value {
+    font-family: var(--font-head);
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1;
+  }
+  .result-item.highlight .result-value { color: var(--accent); }
+  .result-item.green .result-value { color: var(--green); }
+  .result-item.amber .result-value { color: var(--amber); }
+  .result-unit {
+    font-size: 11px;
+    color: var(--text3);
+    font-family: var(--font-mono);
+    margin-top: 3px;
+  }
+
+  /* CALC BREAKDOWN */
+  .calc-breakdown {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 16px;
+    margin-top: 16px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text2);
+    line-height: 2;
+  }
+  .calc-breakdown .step { display: flex; justify-content: space-between; }
+  .calc-breakdown .step span:first-child { color: var(--text3); }
+  .calc-breakdown .step span:last-child { color: var(--text); }
+  .calc-breakdown .step.total span { color: var(--accent); font-weight: 500; }
+  .calc-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 8px 0;
+  }
+
+  /* PUMP TIME TABLE */
+  .pump-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    margin-top: 4px;
+  }
+  .pump-table th {
+    text-align: left;
+    padding: 8px 12px;
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    font-weight: 400;
+  }
+  .pump-table td {
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text2);
+  }
+  .pump-table tr.highlight-row td { color: var(--text); background: var(--bg3); }
+  .pump-table tr.highlight-row td:first-child { color: var(--accent); }
+  .pump-table td:last-child { color: var(--text3); }
+
+  /* HANDBOOK TABLES */
+  .hb-tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+  .hb-tab {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 7px 16px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    color: var(--text3);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .hb-tab:hover { color: var(--text2); border-color: var(--border2); }
+  .hb-tab.active { color: var(--accent); border-color: var(--accent); background: var(--bg4); }
+  .hb-section { display: none; }
+  .hb-section.active { display: block; }
+
+  .ref-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+  .ref-table th {
+    text-align: left;
+    padding: 8px 10px;
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border2);
+    font-weight: 400;
+    white-space: nowrap;
+  }
+  .ref-table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text2);
+    white-space: nowrap;
+  }
+  .ref-table tr:hover td { background: var(--bg3); }
+  .ref-table td:first-child { color: var(--text); font-weight: 500; }
+  .grade-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 2px;
+    font-size: 10px;
+    background: var(--bg4);
+    border: 1px solid var(--border2);
+    color: var(--text2);
+  }
+  .table-scroll { overflow-x: auto; }
+
+  /* FLUID CALCULATOR */
+  .fluid-calc-box {
+    background: var(--bg);
+    border: 1px solid var(--border2);
+    border-radius: 3px;
+    padding: 16px;
+    margin-top: 12px;
+  }
+  .fluid-calc-box .calc-title {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+
+  /* JOB SUMMARY */
+  .summary-box {
+    background: var(--bg);
+    border: 1px solid var(--border2);
+    border-radius: 3px;
+    padding: 24px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 2;
+    color: var(--text2);
+    white-space: pre-wrap;
+    min-height: 200px;
+  }
+  .summary-empty {
+    color: var(--text3);
+    font-style: italic;
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+  .copy-btn {
+    font-family: var(--font-head);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 10px 24px;
+    background: transparent;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 16px;
+  }
+  .copy-btn:hover { background: var(--accent); color: var(--bg); }
+  .copy-btn.copied { background: var(--green); border-color: var(--green); color: var(--bg); }
+
+  /* CALCULATE BUTTON */
+  .calc-btn {
+    font-family: var(--font-head);
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    padding: 14px 40px;
+    background: var(--accent);
+    border: none;
+    color: var(--bg);
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 8px;
+  }
+  .calc-btn:hover { background: #00b8d9; transform: translateY(-1px); }
+  .calc-btn:active { transform: translateY(0); }
+
+  /* ALERT */
+  .alert {
+    padding: 12px 16px;
+    border-radius: 3px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    margin-top: 12px;
+    display: none;
+  }
+  .alert.red { background: rgba(255,77,106,0.1); border: 1px solid var(--red); color: var(--red); display: block; }
+  .alert.amber { background: rgba(255,183,48,0.1); border: 1px solid var(--amber); color: var(--amber); display: block; }
+  .alert.green { background: rgba(0,229,160,0.1); border: 1px solid var(--green); color: var(--green); display: block; }
+
+  /* FOOTER */
+  footer {
+    margin-top: 48px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text3);
+    letter-spacing: 1px;
+  }
+  footer span { color: var(--text2); }
+
+  /* ANIMATE IN */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .card { animation: fadeUp 0.3s ease both; }
+  .card:nth-child(2) { animation-delay: 0.05s; }
+  .card:nth-child(3) { animation-delay: 0.1s; }
+  .card:nth-child(4) { animation-delay: 0.15s; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <div class="header-title">
+      <h1>CT N<span>₂</span> Lift Design Tool</h1>
+      <div class="header-sub">Coiled Tubing Well Intervention — Nitrogen Lift</div>
+    </div>
+    <div class="header-badge">
+      <div>0.052 <span>psi/ft per ppg</span></div>
+      <div>PV convention <span>50 gal/ft</span></div>
+      <div>Data source <span>i-Handbook</span></div>
+    </div>
+  </header>
+
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showTab('calculator')">Calculator</button>
+    <button class="nav-tab" onclick="showTab('handbook')">Reference Handbook</button>
+    <button class="nav-tab" onclick="showTab('summary')">Job Summary</button>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       TAB 1 — CALCULATOR
+  ════════════════════════════════════════════ -->
+  <div id="tab-calculator" class="tab-panel active">
+
+    <!-- FLUID SELECTION -->
+    <div class="card">
+      <div class="card-header">Fluid Selection</div>
+      <div class="grid-3">
+        <div class="field">
+          <label>Fluid type</label>
+          <select id="fluidType" onchange="onFluidTypeChange()">
+            <option value="">— select fluid —</option>
+            <optgroup label="Fixed density">
+              <option value="freshwater">Fresh water</option>
+              <option value="seawater">Seawater</option>
+              <option value="diesel">Diesel</option>
+              <option value="crude">Crude oil (API input)</option>
+              <option value="cacl2_10">CaCl₂ brine — 10.0 ppg</option>
+              <option value="cacl2_11">CaCl₂ brine — 11.0 ppg</option>
+              <option value="cacl2_12">CaCl₂ brine — 12.0 ppg</option>
+              <option value="nacl_8.4">NaCl brine — 8.40 ppg</option>
+              <option value="nacl_8.7">NaCl brine — 8.70 ppg</option>
+              <option value="nacl_9.0">NaCl brine — 9.00 ppg</option>
+              <option value="nacl_10">NaCl brine — 10.00 ppg</option>
+            </optgroup>
+            <optgroup label="Concentration-based (enter % below)">
+              <option value="nh4cl">NH₄Cl — Ammonium Chloride</option>
+              <option value="kcl">KCl — Potassium Chloride</option>
+            </optgroup>
+          </select>
+        </div>
+
+        <div class="field" id="concField" style="display:none">
+          <label>Concentration <span class="unit">%</span></label>
+          <input type="number" id="concPct" min="0" max="30" step="0.5" placeholder="e.g. 2" oninput="calcFluidFromConc()">
+          <span class="optional-tag" id="concHint"></span>
+        </div>
+
+        <div class="field" id="apiField" style="display:none">
+          <label>API gravity <span class="unit">°API</span></label>
+          <input type="number" id="apiGrav" min="10" max="60" step="1" placeholder="e.g. 35" oninput="calcFluidFromAPI()">
+        </div>
+
+        <div class="field">
+          <label>Fluid density <span class="unit">ppg</span></label>
+          <input type="number" id="fluidDensity" step="0.01" placeholder="auto-filled" oninput="runCalc()">
+        </div>
+
+        <div class="field">
+          <label>Fluid gradient <span class="unit">psi/ft</span></label>
+          <input type="number" id="fluidGradient" step="0.0001" placeholder="= 0.052 × ppg" readonly style="color:var(--text3)">
+        </div>
+      </div>
+    </div>
+
+    <!-- WELL DATA -->
+    <div class="card">
+      <div class="card-header">Well & Reservoir Data</div>
+      <div class="grid-3">
+        <div class="field">
+          <label>TVD — top of perforations <span class="unit">ft</span></label>
+          <input type="number" id="tvdTop" placeholder="e.g. 7616" oninput="runCalc()">
+        </div>
+        <div class="field">
+          <label>TVD — bottom of perforations <span class="unit">ft</span></label>
+          <input type="number" id="tvdBot" placeholder="e.g. 7634" oninput="runCalc()">
+        </div>
+        <div class="field">
+          <label>Average perf TVD <span class="unit">ft</span></label>
+          <input type="number" id="tvdAvg" placeholder="auto-calculated" readonly style="color:var(--text3)">
+        </div>
+        <div class="field">
+          <label>Reservoir pressure <span class="unit">psi</span></label>
+          <input type="number" id="resPressure" placeholder="e.g. 3000" oninput="runCalc()">
+        </div>
+        <div class="field">
+          <label>Target underbalance <span class="unit">psi</span></label>
+          <input type="number" id="underbalance" placeholder="e.g. 300" oninput="runCalc()">
+        </div>
+        <div class="field">
+          <label>Formation temperature <span class="unit">°F</span> <span class="optional-tag">(optional)</span></label>
+          <input type="number" id="formTemp" placeholder="e.g. 175" oninput="runCalc()">
+        </div>
+      </div>
+    </div>
+
+    <!-- TUBING SELECTION -->
+    <div class="card">
+      <div class="card-header">Production Tubing</div>
+      <div class="grid-4">
+        <div class="field">
+          <label>Tubing OD <span class="unit">in</span></label>
+          <select id="tubingOD" onchange="populateTubingWeight()">
+            <option value="">— select OD —</option>
+            <option value="1.050">1.050"</option>
+            <option value="1.315">1.315"</option>
+            <option value="1.660">1.660"</option>
+            <option value="1.900">1.900"</option>
+            <option value="2.063">2.063"</option>
+            <option value="2.375">2.375"</option>
+            <option value="2.875">2.875"</option>
+            <option value="3.500">3.500"</option>
+            <option value="4.000">4.000"</option>
+            <option value="4.500">4.500"</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Weight <span class="unit">lb/ft</span></label>
+          <select id="tubingWeight" onchange="populateTubingID()">
+            <option value="">— select OD first —</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>ID <span class="unit">in</span></label>
+          <input type="text" id="tubingID" readonly placeholder="auto-filled" style="color:var(--text3)">
+        </div>
+        <div class="field">
+          <label>Capacity <span class="unit">gal/ft</span></label>
+          <input type="text" id="tubingCap" readonly placeholder="auto-filled" style="color:var(--text3)">
+        </div>
+      </div>
+    </div>
+
+    <!-- CALCULATE BUTTON -->
+    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+      <button class="calc-btn" onclick="runCalc()">Calculate</button>
+      <button class="calc-btn" onclick="resetAll()" style="background:transparent;color:var(--text3);border:1px solid var(--border2)">Reset</button>
+    </div>
+
+    <div id="alertBox"></div>
+
+    <!-- RESULTS -->
+    <div class="card" id="resultsCard" style="margin-top:20px;display:none">
+      <div class="card-header">Calculation Results</div>
+      <div class="results-grid">
+        <div class="result-item">
+          <div class="result-label">Hydrostatic pressure</div>
+          <div class="result-value" id="r-hydroPsi">—</div>
+          <div class="result-unit">psi</div>
+        </div>
+        <div class="result-item">
+          <div class="result-label">Fluid gradient</div>
+          <div class="result-value" id="r-gradient">—</div>
+          <div class="result-unit">psi/ft</div>
+        </div>
+        <div class="result-item">
+          <div class="result-label">Hydrostatic overbalance</div>
+          <div class="result-value" id="r-overbalance">—</div>
+          <div class="result-unit">psi</div>
+        </div>
+        <div class="result-item">
+          <div class="result-label">Pressure reduction required</div>
+          <div class="result-value" id="r-pressRed">—</div>
+          <div class="result-unit">psi</div>
+        </div>
+        <div class="result-item highlight">
+          <div class="result-label">Lift depth</div>
+          <div class="result-value" id="r-liftDepth">—</div>
+          <div class="result-unit">ft MD</div>
+        </div>
+        <div class="result-item green">
+          <div class="result-label">N₂ volume required</div>
+          <div class="result-value" id="r-n2vol">—</div>
+          <div class="result-unit">USG</div>
+        </div>
+        <div class="result-item amber">
+          <div class="result-label">Tanks required (incl. 100% backup)</div>
+          <div class="result-value" id="r-tanks">—</div>
+          <div class="result-unit">× 2,000 gal tanks</div>
+        </div>
+      </div>
+
+      <!-- CALC BREAKDOWN -->
+      <div class="calc-breakdown" id="calcBreakdown"></div>
+
+      <!-- PUMP TIME TABLE -->
+      <div style="margin-top:24px">
+        <div class="card-header" style="margin-bottom:12px">Pump Time at Various Rates</div>
+        <table class="pump-table">
+          <thead>
+            <tr>
+              <th>Pump rate (SCF/min)</th>
+              <th>N₂ volume (SCF)</th>
+              <th>Pump time (min)</th>
+              <th>Pump time (hrs)</th>
+              <th>Note</th>
+            </tr>
+          </thead>
+          <tbody id="pumpTimeBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- end tab-calculator -->
+
+
+  <!-- ═══════════════════════════════════════════
+       TAB 2 — HANDBOOK
+  ════════════════════════════════════════════ -->
+  <div id="tab-handbook" class="tab-panel">
+    <div class="card">
+      <div class="card-header">Engineering Reference Handbook</div>
+      <div style="font-size:11px;color:var(--text3);font-family:var(--font-mono);margin-bottom:16px">Source: i-Handbook — verified data</div>
+      <div class="hb-tabs">
+        <button class="hb-tab active" onclick="showHBTab('tubing')">Production tubing (API)</button>
+        <button class="hb-tab" onclick="showHBTab('ct')">CT pipe dimensions</button>
+        <button class="hb-tab" onclick="showHBTab('fluid')">Fluid properties</button>
+        <button class="hb-tab" onclick="showHBTab('brine')">Brine density calculator</button>
+      </div>
+
+      <!-- TUBING TABLE -->
+      <div id="hb-tubing" class="hb-section active">
+        <div style="font-size:11px;color:var(--text3);font-family:var(--font-mono);margin-bottom:12px">
+          Select tubing OD → weight → ID and capacity auto-populate in the calculator
+        </div>
+        <div class="table-scroll">
+          <table class="ref-table" id="tubingRefTable"></table>
+        </div>
+      </div>
+
+      <!-- CT TABLE -->
+      <div id="hb-ct" class="hb-section">
+        <div style="font-size:11px;color:var(--text3);font-family:var(--font-mono);margin-bottom:12px">
+          CT pipe reference only — not used in N₂ volume calculation
+        </div>
+        <div class="table-scroll">
+          <table class="ref-table" id="ctRefTable"></table>
+        </div>
+      </div>
+
+      <!-- FLUID TABLE -->
+      <div id="hb-fluid" class="hb-section">
+        <div class="table-scroll">
+          <table class="ref-table" id="fluidRefTable"></table>
+        </div>
+      </div>
+
+      <!-- BRINE CALCULATOR -->
+      <div id="hb-brine" class="hb-section">
+        <div style="font-size:11px;color:var(--text3);font-family:var(--font-mono);margin-bottom:16px">
+          Enter salt type and concentration to calculate brine density and gradient
+        </div>
+        <div class="grid-3">
+          <div class="field">
+            <label>Salt type</label>
+            <select id="brineSalt" onchange="calcBrine()">
+              <option value="">— select —</option>
+              <option value="nh4cl">NH₄Cl — Ammonium Chloride</option>
+              <option value="kcl">KCl — Potassium Chloride</option>
+              <option value="nacl">NaCl — Sodium Chloride</option>
+              <option value="cacl2">CaCl₂ — Calcium Chloride</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Concentration <span class="unit">%</span></label>
+            <input type="number" id="brineConc" min="0" max="30" step="0.5" placeholder="e.g. 2" oninput="calcBrine()">
+          </div>
+          <div class="field">
+            <label>Desired volume <span class="unit">bbl</span></label>
+            <input type="number" id="brineVol" min="0" step="1" placeholder="e.g. 50" oninput="calcBrine()">
+          </div>
+        </div>
+        <div class="fluid-calc-box" id="brineResult" style="display:none">
+          <div class="calc-title">Brine calculation result</div>
+          <div class="results-grid" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr))">
+            <div class="result-item highlight">
+              <div class="result-label">Brine density</div>
+              <div class="result-value" id="br-density">—</div>
+              <div class="result-unit">ppg</div>
+            </div>
+            <div class="result-item">
+              <div class="result-label">Hydrostatic gradient</div>
+              <div class="result-value" id="br-gradient">—</div>
+              <div class="result-unit">psi/ft</div>
+            </div>
+            <div class="result-item green">
+              <div class="result-label">Salt required</div>
+              <div class="result-value" id="br-salt">—</div>
+              <div class="result-unit">lbm</div>
+            </div>
+            <div class="result-item">
+              <div class="result-label">Water required</div>
+              <div class="result-value" id="br-water">—</div>
+              <div class="result-unit">gal US</div>
+            </div>
+          </div>
+          <div class="calc-breakdown" id="br-breakdown" style="margin-top:12px"></div>
+        </div>
+        <div style="margin-top:20px">
+          <div style="font-family:var(--font-mono);font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px">Concentration table — <span id="brineTableTitle">select a salt above</span></div>
+          <div class="table-scroll">
+            <table class="ref-table" id="brineRefTable">
+              <thead><tr><th>% Conc.</th><th>Density (ppg)</th><th>Gradient (psi/ft)</th></tr></thead>
+              <tbody id="brineRefBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div><!-- end tab-handbook -->
+
+
+  <!-- ═══════════════════════════════════════════
+       TAB 3 — JOB SUMMARY
+  ════════════════════════════════════════════ -->
+  <div id="tab-summary" class="tab-panel">
+    <div class="card">
+      <div class="card-header">Auto-Generated Job Summary</div>
+      <div style="font-size:11px;color:var(--text3);font-family:var(--font-mono);margin-bottom:16px">
+        Complete all inputs and run calculation to generate summary
+      </div>
+      <div class="summary-box" id="summaryBox">
+        <span class="summary-empty">No calculation run yet. Complete inputs in the Calculator tab and press Calculate.</span>
+      </div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:16px">
+        <button class="copy-btn" id="copyBtn" onclick="copySummary()">Copy to clipboard</button>
+        <button class="copy-btn" onclick="exportPDF()" style="border-color:var(--green);color:var(--green)">Export as PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    CT N₂ Lift Design Tool &nbsp;·&nbsp; <span>Designed by Tolase Adeleke</span> &nbsp;·&nbsp; Data: i-Handbook &nbsp;·&nbsp; <span>v1.0 MVP</span>
+  </footer>
+
+</div><!-- end app -->
+
+<script>
+// ══════════════════════════════════════════════════════
+// DATA TABLES
+// ══════════════════════════════════════════════════════
+
+// Production tubing: [OD, connection, weight, grade, ID, capBBL]
+// Source: i-Handbook — Dimensions and Capacities of Tubing
+const TUBING = [
+  [1.050,'NU',1.14,'H-40',0.824,0.00066],[1.050,'U',1.20,'H-40',0.824,0.00066],[1.050,'U',1.54,'J-55',0.742,0.00053],
+  [1.315,'NU',1.70,'H-40',1.049,0.00106],[1.315,'I',1.72,'H-40',1.049,0.00106],[1.315,'U',1.80,'J-55',1.049,0.00106],
+  [1.315,'U',2.24,'J-55',0.957,0.00089],[1.315,'I',2.40,'N-80',1.380,0.00185],
+  [1.660,'NU',2.30,'J-55',1.380,0.00185],[1.660,'I',2.33,'J-55',1.380,0.00185],[1.660,'U',2.40,'J-55',1.380,0.00185],
+  [1.660,'U',3.07,'N-80',1.278,0.00158],
+  [1.900,'I',2.40,'J-55',1.650,0.00264],[1.900,'NU',2.75,'J-55',1.610,0.00251],[1.900,'I',2.76,'J-55',1.610,0.00251],
+  [1.900,'U',2.90,'J-55',1.610,0.00251],[1.900,'U',3.73,'N-80',1.500,0.00218],[1.900,'U',4.42,'N-80',1.400,0.00190],[1.900,'NU',5.15,'P-110',1.300,0.00164],
+  [2.063,'I',3.25,'J-55',1.751,0.00297],[2.063,'NU',4.50,'N-80',1.613,0.00252],
+  [2.375,'NU',4.00,'J-55',2.041,0.00404],[2.375,'NU',4.60,'J-55',1.995,0.00386],[2.375,'U',4.70,'J-55',1.995,0.00386],
+  [2.375,'NU',5.80,'J-55',1.867,0.00338],[2.375,'U',5.95,'N-80',1.867,0.00338],[2.375,'NU',6.60,'N-80',1.785,0.00309],
+  [2.375,'U',7.35,'N-80',1.703,0.00281],[2.375,'U',7.45,'P-110',1.703,0.00281],
+  [2.875,'NU',6.40,'J-55',2.441,0.00578],[2.875,'U',6.50,'J-55',2.441,0.00578],[2.875,'NU',7.80,'J-55',2.323,0.00524],
+  [2.875,'U',7.90,'N-80',2.323,0.00524],[2.875,'U',8.60,'N-80',2.259,0.00495],[2.875,'NU',8.70,'N-80',2.259,0.00495],
+  [2.875,'NU',9.35,'N-80',2.195,0.00468],[2.875,'U',9.45,'N-80',2.195,0.00468],[2.875,'NU',10.50,'P-110',2.091,0.00424],
+  [2.875,'NU',11.50,'P-110',1.995,0.00386],
+  [3.500,'NU',7.70,'J-55',3.068,0.00914],[3.500,'NU',9.20,'J-55',2.992,0.00869],[3.500,'U',9.30,'J-55',2.992,0.00869],
+  [3.500,'NU',10.20,'N-80',2.922,0.00829],[3.500,'NU',12.70,'N-80',2.750,0.00734],[3.500,'NU',14.30,'N-80',2.640,0.00677],
+  [3.500,'NU',15.50,'P-110',2.548,0.00630],[3.500,'NU',17.00,'P-110',2.440,0.00578],
+  [4.000,'NU',9.50,'J-55',3.548,0.01222],[4.000,'U',11.00,'J-55',3.476,0.01173],[4.000,'NU',13.20,'N-80',3.340,0.01083],
+  [4.000,'NU',16.10,'N-80',3.170,0.00976],[4.000,'NU',18.90,'P-110',3.000,0.00874],[4.000,'NU',22.20,'P-110',2.780,0.00750],
+  [4.500,'NU',12.60,'J-55',3.958,0.01521],[4.500,'U',12.75,'J-55',3.958,0.01521],[4.500,'NU',15.20,'N-80',3.826,0.01422],
+  [4.500,'NU',17.00,'N-80',3.740,0.01358],[4.500,'NU',18.90,'N-80',3.640,0.01287],[4.500,'NU',21.50,'P-110',3.500,0.01190],
+  [4.500,'NU',23.70,'P-110',3.380,0.01109],[4.500,'NU',26.00,'P-110',3.240,0.01019],
+];
+
+// CT pipe: [OD, grade, weight, ID, capBBL]
+// Source: i-Handbook — Dimensions and Capacities of Coiled Tubing
+const CT_PIPE = [
+  [1.000,'HS90',0.85,0.826,0.00066],[1.000,'HS90',0.92,0.810,0.00063],[1.000,'HS90',0.98,0.796,0.00061],
+  [1.000,'HS90',1.04,0.782,0.00059],[1.000,'HS80',0.79,0.840,0.00068],[1.000,'HS80',0.85,0.826,0.00066],
+  [1.250,'HS90',1.08,1.076,0.00112],[1.250,'HS90',1.18,1.060,0.00109],[1.250,'HS90',1.25,1.046,0.00106],
+  [1.250,'HS90',1.33,1.032,0.00103],[1.250,'HS90',1.41,1.018,0.00100],[1.250,'HS90',1.51,1.000,0.00097],
+  [1.250,'HS90',1.60,0.982,0.00093],[1.250,'HS90',1.72,0.960,0.00089],[1.250,'HS90',1.83,0.938,0.00085],
+  [1.500,'HS90',1.62,1.282,0.00159],[1.500,'HS90',1.72,1.268,0.00156],[1.500,'HS90',1.84,1.250,0.00151],
+  [1.500,'HS90',1.96,1.232,0.00147],[1.500,'HS90',2.10,1.210,0.00142],[1.500,'HS90',2.25,1.188,0.00137],
+  [1.500,'HS90',2.48,1.150,0.00128],[1.500,'HS90',2.67,1.120,0.00121],
+  [1.750,'HS90',1.92,1.532,0.00228],[1.750,'HS90',2.03,1.518,0.00223],[1.750,'HS90',2.17,1.500,0.00218],
+  [1.750,'HS90',2.32,1.482,0.00213],[1.750,'HS90',2.49,1.460,0.00207],[1.750,'HS90',2.66,1.438,0.00200],
+  [1.750,'HS90',2.95,1.400,0.00190],[1.750,'HS90',3.17,1.370,0.00182],
+  [2.000,'HS90',2.21,1.782,0.00308],[2.000,'HS90',2.34,1.768,0.00303],[2.000,'HS90',2.51,1.750,0.00297],
+  [2.000,'HS90',2.68,1.732,0.00291],[2.000,'HS90',2.88,1.710,0.00284],[2.000,'HS90',3.08,1.688,0.00276],
+  [2.000,'HS90',3.42,1.650,0.00264],[2.000,'HS90',3.68,1.620,0.00254],
+  [2.375,'HS90',3.01,2.125,0.00438],[2.375,'HS90',3.21,2.107,0.00431],[2.375,'HS90',3.46,2.085,0.00422],
+  [2.375,'HS90',3.71,2.063,0.00413],[2.375,'HS90',4.12,2.025,0.00398],[2.375,'HS90',4.45,1.995,0.00386],
+  [2.375,'HS90',4.74,1.967,0.00375],[2.375,'HS90',5.16,1.927,0.00360],
+  [2.875,'HS90',4.54,2.563,0.00638],[2.875,'HS90',5.06,2.525,0.00619],[2.875,'HS90',5.46,2.495,0.00604],
+  [2.875,'HS90',5.83,2.467,0.00591],[2.875,'HS90',6.36,2.427,0.00572],[2.875,'HS90',7.03,2.375,0.00547],
+  [3.500,'HS90',6.23,3.150,0.00963],[3.500,'HS90',6.73,3.120,0.00945],[3.500,'HS90',7.20,3.092,0.00928],
+];
+
+// Fluid data: {id, name, density(ppg), fixed}
+const FLUID_DATA = {
+  freshwater: {name:'Fresh water', density:8.33, fixed:true},
+  seawater: {name:'Seawater', density:8.55, fixed:true},
+  diesel: {name:'Diesel', density:7.00, fixed:true},
+  cacl2_10: {name:'CaCl₂ brine', density:10.00, fixed:true},
+  cacl2_11: {name:'CaCl₂ brine', density:11.00, fixed:true},
+  cacl2_12: {name:'CaCl₂ brine', density:12.00, fixed:true},
+  'nacl_8.4': {name:'NaCl brine', density:8.40, fixed:true},
+  'nacl_8.7': {name:'NaCl brine', density:8.70, fixed:true},
+  nacl_9: {name:'NaCl brine', density:9.00, fixed:true},
+  nacl_10: {name:'NaCl brine', density:10.00, fixed:true},
+  nh4cl: {name:'NH₄Cl solution', fixed:false},
+  kcl: {name:'KCl solution', fixed:false},
+  crude: {name:'Crude oil', fixed:false},
+};
+
+// NH4Cl concentration table (i-Handbook)
+const NH4CL_TABLE = [
+  [1,8.35,0.434],[2,8.38,0.436],[4,8.43,0.438],[6,8.48,0.440],[8,8.53,0.444],
+  [10,8.58,0.446],[12,8.63,0.449],[14,8.67,0.451],[16,8.72,0.453],[18,8.77,0.456],
+  [20,8.81,0.458],[22,8.86,0.461],[24,8.90,0.463],
+];
+
+// KCl concentration table (i-Handbook)
+const KCL_TABLE = [
+  [1,8.37,0.435],[2,8.43,0.438],[4,8.53,0.443],[6,8.64,0.449],[8,8.75,0.455],
+  [10,8.86,0.460],[12,8.97,0.466],[14,9.09,0.472],[16,9.20,0.478],[18,9.32,0.484],
+  [20,9.44,0.491],[22,9.56,0.497],[24,9.69,0.503],
+];
+
+// NaCl concentration table (i-Handbook)
+const NACL_TABLE = [
+  [1,8.40,0.436],[3,8.50,0.441],[4,8.60,0.446],[6,8.70,0.452],[7,8.80,0.457],
+  [9,8.90,0.462],[11,9.00,0.468],[12,9.10,0.473],[14,9.20,0.478],[15,9.30,0.483],
+  [17,9.40,0.488],[18,9.50,0.494],[20,9.60,0.499],[21,9.70,0.504],[23,9.80,0.510],
+];
+
+// CaCl2 concentration table (i-Handbook)
+const CACL2_TABLE = [
+  [1,8.40,0.436],[3,8.60,0.446],[7,8.80,0.457],[9,9.00,0.468],[11,9.20,0.478],
+  [14,9.40,0.488],[16,9.60,0.499],[19,9.80,0.510],[21,10.00,0.520],[23,10.20,0.530],
+  [26,10.40,0.540],[28,10.60,0.550],[30,10.80,0.561],[32,11.00,0.571],[34,11.20,0.581],
+  [36,11.40,0.592],[38,11.60,0.602],[40,11.80,0.612],[42,12.00,0.623],
+];
+
+// ══════════════════════════════════════════════════════
+// STORED RESULTS
+// ══════════════════════════════════════════════════════
+let lastResults = null;
+
+// ══════════════════════════════════════════════════════
+// TAB NAVIGATION
+// ══════════════════════════════════════════════════════
+function showTab(tab) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  event.target.classList.add('active');
+}
+
+function showHBTab(tab) {
+  document.querySelectorAll('.hb-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.hb-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('hb-' + tab).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ══════════════════════════════════════════════════════
+// FLUID LOGIC
+// ══════════════════════════════════════════════════════
+function onFluidTypeChange() {
+  const ft = document.getElementById('fluidType').value;
+  const concField = document.getElementById('concField');
+  const apiField = document.getElementById('apiField');
+  concField.style.display = 'none';
+  apiField.style.display = 'none';
+  document.getElementById('concPct').value = '';
+
+  if (ft === 'nh4cl' || ft === 'kcl') {
+    concField.style.display = 'flex';
+    const hint = ft === 'nh4cl' ? 'Typical: 2%' : 'Typical: 2–4%';
+    document.getElementById('concHint').textContent = hint;
+    document.getElementById('fluidDensity').value = '';
+    document.getElementById('fluidGradient').value = '';
+  } else if (ft === 'crude') {
+    apiField.style.display = 'flex';
+    document.getElementById('fluidDensity').value = '';
+    document.getElementById('fluidGradient').value = '';
+  } else if (ft && FLUID_DATA[ft]) {
+    const d = FLUID_DATA[ft].density;
+    document.getElementById('fluidDensity').value = d.toFixed(2);
+    document.getElementById('fluidGradient').value = (0.052 * d).toFixed(4);
+  } else {
+    document.getElementById('fluidDensity').value = '';
+    document.getElementById('fluidGradient').value = '';
+  }
+  runCalc();
+}
+
+function calcFluidFromConc() {
+  const ft = document.getElementById('fluidType').value;
+  const pct = parseFloat(document.getElementById('concPct').value);
+  if (isNaN(pct)) return;
+  const table = ft === 'nh4cl' ? NH4CL_TABLE : KCL_TABLE;
+  const density = interpolate(table, pct, 0, 1);
+  const gradient = interpolate(table, pct, 0, 2);
+  if (density) {
+    document.getElementById('fluidDensity').value = density.toFixed(2);
+    document.getElementById('fluidGradient').value = gradient.toFixed(4);
+  }
+  runCalc();
+}
+
+function calcFluidFromAPI() {
+  const api = parseFloat(document.getElementById('apiGrav').value);
+  if (isNaN(api)) return;
+  const sg = 141.5 / (api + 131.5);
+  const density = sg * 8.337;
+  document.getElementById('fluidDensity').value = density.toFixed(2);
+  document.getElementById('fluidGradient').value = (0.052 * density).toFixed(4);
+  runCalc();
+}
+
+function interpolate(table, x, xCol, yCol) {
+  if (x <= table[0][xCol]) return table[0][yCol];
+  if (x >= table[table.length-1][xCol]) return table[table.length-1][yCol];
+  for (let i = 0; i < table.length-1; i++) {
+    if (x >= table[i][xCol] && x <= table[i+1][xCol]) {
+      const t = (x - table[i][xCol]) / (table[i+1][xCol] - table[i][xCol]);
+      return table[i][yCol] + t * (table[i+1][yCol] - table[i][yCol]);
+    }
+  }
+  return null;
+}
+
+// ══════════════════════════════════════════════════════
+// TUBING DROPDOWNS
+// ══════════════════════════════════════════════════════
+function populateTubingWeight() {
+  const od = parseFloat(document.getElementById('tubingOD').value);
+  const wSel = document.getElementById('tubingWeight');
+  wSel.innerHTML = '<option value="">— select weight —</option>';
+  document.getElementById('tubingID').value = '';
+  document.getElementById('tubingCap').value = '';
+  if (!od) return;
+  const rows = TUBING.filter(r => r[0] === od);
+  rows.forEach(r => {
+    const opt = document.createElement('option');
+    // r = [OD, conn, weight, grade, ID, capBBL]
+    opt.value = r[2] + '|' + r[1] + '|' + r[3];
+    opt.textContent = r[2] + ' lb/ft';
+    wSel.appendChild(opt);
+  });
+}
+
+function populateTubingID() {
+  const wSel = document.getElementById('tubingWeight');
+  const od = parseFloat(document.getElementById('tubingOD').value);
+  if (!od || !wSel.value) return;
+  const parts = wSel.value.split('|');
+  const wt = parseFloat(parts[0]);
+  const conn = parts[1];
+  const grade = parts[2];
+  const row = TUBING.find(r => r[0] === od && r[2] === wt && r[1] === conn && r[3] === grade);
+  if (row) {
+    // r = [OD, conn, weight, grade, ID, capBBL]
+    document.getElementById('tubingID').value = row[4] + '"';
+    const galFt = (row[5] * 42).toFixed(5);
+    document.getElementById('tubingCap').value = galFt;
+  }
+  runCalc();
+}
+
+// ══════════════════════════════════════════════════════
+// MAIN CALCULATION
+// ══════════════════════════════════════════════════════
+function runCalc() {
+  const tvdTop = parseFloat(document.getElementById('tvdTop').value);
+  const tvdBot = parseFloat(document.getElementById('tvdBot').value);
+  const density = parseFloat(document.getElementById('fluidDensity').value);
+  const resPres = parseFloat(document.getElementById('resPressure').value);
+  const ub = parseFloat(document.getElementById('underbalance').value);
+  const tubingCapGal = parseFloat(document.getElementById('tubingCap').value);
+  const alertBox = document.getElementById('alertBox');
+  alertBox.innerHTML = '';
+
+  // Auto-calc avg TVD
+  if (!isNaN(tvdTop) && !isNaN(tvdBot)) {
+    document.getElementById('tvdAvg').value = ((tvdTop + tvdBot) / 2).toFixed(1);
+  }
+
+  // Auto-calc gradient
+  if (!isNaN(density)) {
+    document.getElementById('fluidGradient').value = (0.052 * density).toFixed(4);
+  }
+
+  // Need all core inputs
+  if (isNaN(tvdTop) || isNaN(tvdBot) || isNaN(density) || isNaN(resPres) || isNaN(ub)) return;
+  if (!tubingCapGal) {
+    alertBox.innerHTML = '<div class="alert amber">Select tubing OD, weight and grade to calculate N₂ volume.</div>';
+    return;
+  }
+
+  const tvdAvg = (tvdTop + tvdBot) / 2;
+  const CONST = 0.052; // unit conversion constant — psi/ft per ppg
+  const hydroPsi = CONST * density * tvdAvg;
+  const gradient = CONST * density;
+  const overbalance = hydroPsi - resPres;
+  const pressRed = overbalance + ub;
+
+  // Well control check
+  if (overbalance < 0) {
+    alertBox.innerHTML = '<div class="alert red">Well is already underbalanced — hydrostatic pressure is LESS than reservoir pressure. N₂ lift may not be required. Verify well data.</div>';
+    document.getElementById('resultsCard').style.display = 'none';
+    return;
+  }
+
+  const liftDepth = 1.2 * (pressRed / gradient);
+  const n2VolGal = liftDepth * tubingCapGal;
+  // Tank logic: 100% backup means double the required volume, then ceil to tank count
+  const tanks = Math.ceil((n2VolGal * 2) / 2000);
+
+  // Convert to SCF for pump time: 1 gal liquid ≈ not needed — N2 vol is already volume
+  // Surface SCF: use Boyle's Law P1V1 = P2V2
+  // P1 = pressure at lift depth, P2 = 14.7 psia (surface)
+  const pAtLiftDepth = resPres - ub; // approx pressure at lift point
+  const n2VolSCF = (pAtLiftDepth / 14.7) * n2VolGal * (1 / 7.48052); // gal to ft3 then to SCF
+  // Simplified: industry standard SCF/gal at depth
+  // N2 volume in SCF = (Pdownhole/Psurface) * volume_at_depth_ft3
+  // Practical: 1 USG at depth = (P_depth_psia/14.7) * (1/7.48) SCF
+  const n2SCF = (pAtLiftDepth / 14.7) * (n2VolGal / 7.48052);
+
+  // Store
+  lastResults = { tvdAvg, hydroPsi, gradient, overbalance, pressRed, liftDepth,
+    n2VolGal, tanks, n2SCF, density,
+    resPres, ub, tvdTop, tvdBot, tubingCapGal, pAtLiftDepth,
+    fluidName: document.getElementById('fluidType').selectedOptions[0]?.text || 'Selected fluid',
+    tubingDesc: (document.getElementById('tubingOD').value || '') + '" — ' + (parseFloat(document.getElementById('tubingWeight').value) || '') + ' lb/ft',
+    temp: document.getElementById('formTemp').value || 'Not specified',
+  };
+
+  showResults(lastResults);
+  generateSummary(lastResults);
+}
+
+function showResults(r) {
+  document.getElementById('resultsCard').style.display = 'block';
+  document.getElementById('r-hydroPsi').textContent = r.hydroPsi.toFixed(1);
+  document.getElementById('r-gradient').textContent = r.gradient.toFixed(4);
+  document.getElementById('r-overbalance').textContent = r.overbalance.toFixed(1);
+  document.getElementById('r-pressRed').textContent = r.pressRed.toFixed(1);
+  document.getElementById('r-liftDepth').textContent = r.liftDepth.toFixed(0);
+  document.getElementById('r-n2vol').textContent = r.n2VolGal.toFixed(0);
+  document.getElementById('r-tanks').textContent = r.tanks;
+
+  // Breakdown
+  document.getElementById('calcBreakdown').innerHTML = `
+    <div class="step"><span>Average perf TVD = (${r.tvdTop} + ${r.tvdBot}) / 2</span><span>${r.tvdAvg.toFixed(1)} ft</span></div>
+    <div class="step"><span>Hydrostatic pressure = 0.052 × ${r.density} ppg × ${r.tvdAvg.toFixed(1)} ft</span><span>${r.hydroPsi.toFixed(1)} psi</span></div>
+    <div class="step"><span>Fluid gradient = 0.052 × ${r.density} ppg</span><span>${r.gradient.toFixed(4)} psi/ft</span></div>
+    <hr class="calc-divider">
+    <div class="step"><span>Hydrostatic overbalance = ${r.hydroPsi.toFixed(1)} − ${r.resPres}</span><span>${r.overbalance.toFixed(1)} psi</span></div>
+    <div class="step"><span>Pressure reduction required = ${r.overbalance.toFixed(1)} + ${r.ub} (target UB)</span><span>${r.pressRed.toFixed(1)} psi</span></div>
+    <hr class="calc-divider">
+    <div class="step total"><span>Lift depth = 1.2 × (${r.pressRed.toFixed(1)} / ${r.gradient.toFixed(4)})</span><span>${r.liftDepth.toFixed(0)} ft</span></div>
+    <div class="step total"><span>N₂ volume = ${r.liftDepth.toFixed(0)} ft × ${r.tubingCapGal.toFixed(5)} gal/ft</span><span>${r.n2VolGal.toFixed(0)} USG</span></div>
+    <div class="step total"><span>Tanks = ⌈(${r.n2VolGal.toFixed(0)} × 2) / 2,000⌉ — 100% backup doubles required vol.</span><span>${r.tanks} tanks (${(r.tanks * 2000).toLocaleString()} USG total)</span></div>
+  `;
+
+  // Pump time table
+  const rates = [150, 200, 250, 300, 350, 400];
+  let rows = '';
+  rates.forEach(rate => {
+    const mins = (r.n2SCF / rate).toFixed(1);
+    const hrs = (r.n2SCF / rate / 60).toFixed(2);
+    const isStd = rate === 250;
+    rows += `<tr${isStd ? ' class="highlight-row"' : ''}>
+      <td>${rate}</td>
+      <td>${r.n2SCF.toFixed(0)}</td>
+      <td>${mins}</td>
+      <td>${hrs}</td>
+      <td>${isStd ? '★ Standard rate' : ''}</td>
+    </tr>`;
+  });
+  document.getElementById('pumpTimeBody').innerHTML = rows;
+}
+
+// ══════════════════════════════════════════════════════
+// JOB SUMMARY
+// ══════════════════════════════════════════════════════
+function generateSummary(r) {
+  const date = new Date().toLocaleDateString('en-GB', {day:'2-digit', month:'long', year:'numeric'});
+  const stdTime = (r.n2SCF / 250).toFixed(0);
+  const summary =
+`CT N₂ LIFT DESIGN SUMMARY
+Generated: ${date}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+WELL INTERVAL
+  TVD — Top of perforations     : ${r.tvdTop} ft
+  TVD — Bottom of perforations  : ${r.tvdBot} ft
+  Average perforation TVD       : ${r.tvdAvg.toFixed(1)} ft
+  Formation temperature         : ${r.temp}${r.temp !== 'Not specified' ? ' °F' : ''}
+
+FLUID DATA
+  Fluid in wellbore             : ${r.fluidName}
+  Fluid density                 : ${r.density} ppg
+  Hydrostatic fluid gradient    : ${r.gradient.toFixed(4)} psi/ft
+  (Constant: 0.052 psi/ft per ppg)
+
+PRESSURE ANALYSIS
+  Hydrostatic pressure          : ${r.hydroPsi.toFixed(1)} psi
+  Reservoir pressure            : ${r.resPres} psi
+  Hydrostatic overbalance       : ${r.overbalance.toFixed(1)} psi
+  Target underbalance           : ${r.ub} psi
+  Total pressure reduction req. : ${r.pressRed.toFixed(1)} psi
+
+LIFT DESIGN
+  Tubing                        : ${r.tubingDesc}
+  Tubing capacity               : ${r.tubingCapGal.toFixed(5)} gal/ft
+  N₂ lift depth                 : ${r.liftDepth.toFixed(0)} ft MD
+  (Lift depth = 1.2 × Pressure Reduction / Fluid Gradient)
+
+NITROGEN REQUIREMENTS
+  N₂ volume required            : ${r.n2VolGal.toFixed(0)} USG
+  N₂ volume (surface SCF)       : ${r.n2SCF.toFixed(0)} SCF
+  Tanks required                : ${r.tanks} × 2,000-gal tanks = ${(r.tanks * 2000).toLocaleString()} USG total (100% backup on ${Math.ceil(r.n2VolGal/2000)} tank job volume)
+  Standard pump rate            : 250 SCF/min
+  Estimated pump time @ 250 scf/min : ${stdTime} min (${(stdTime/60).toFixed(2)} hrs)
+
+PUMP TIME AT VARIOUS RATES
+  150 SCF/min  →  ${(r.n2SCF/150).toFixed(0)} min  (${(r.n2SCF/150/60).toFixed(2)} hrs)
+  200 SCF/min  →  ${(r.n2SCF/200).toFixed(0)} min  (${(r.n2SCF/200/60).toFixed(2)} hrs)
+  250 SCF/min  →  ${(r.n2SCF/250).toFixed(0)} min  (${(r.n2SCF/250/60).toFixed(2)} hrs)  ★ standard
+  300 SCF/min  →  ${(r.n2SCF/300).toFixed(0)} min  (${(r.n2SCF/300/60).toFixed(2)} hrs)
+  350 SCF/min  →  ${(r.n2SCF/350).toFixed(0)} min  (${(r.n2SCF/350/60).toFixed(2)} hrs)
+  400 SCF/min  →  ${(r.n2SCF/400).toFixed(0)} min  (${(r.n2SCF/400/60).toFixed(2)} hrs)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Designed by: Tolase Adeleke
+Tool: CT N₂ Lift Design Tool v1.0
+Data reference: i-Handbook`;
+
+  document.getElementById('summaryBox').textContent = summary;
+}
+
+function copySummary() {
+  const box = document.getElementById('summaryBox');
+  const text = box.innerText || box.textContent;
+  if (text.includes('No calculation')) return;
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(() => {
+      flashCopyBtn();
+    }).catch(() => fallbackCopy(text));
+  } else {
+    fallbackCopy(text);
+  }
+}
+
+function fallbackCopy(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.focus();
+  ta.select();
+  try { document.execCommand('copy'); flashCopyBtn(); } catch(e) {}
+  document.body.removeChild(ta);
+}
+
+function flashCopyBtn() {
+  const btn = document.getElementById('copyBtn');
+  btn.textContent = 'Copied!';
+  btn.classList.add('copied');
+  setTimeout(() => { btn.textContent = 'Copy to clipboard'; btn.classList.remove('copied'); }, 2500);
+}
+
+// ══════════════════════════════════════════════════════
+// BRINE CALCULATOR
+// ══════════════════════════════════════════════════════
+function calcBrine() {
+  const salt = document.getElementById('brineSalt').value;
+  const conc = parseFloat(document.getElementById('brineConc').value);
+  const vol = parseFloat(document.getElementById('brineVol').value);
+  const result = document.getElementById('brineResult');
+
+  const tableMap = { nh4cl: NH4CL_TABLE, kcl: KCL_TABLE, nacl: NACL_TABLE, cacl2: CACL2_TABLE };
+  const nameMap = { nh4cl:'NH₄Cl — Ammonium Chloride', kcl:'KCl — Potassium Chloride', nacl:'NaCl — Sodium Chloride', cacl2:'CaCl₂ — Calcium Chloride' };
+
+  // Populate reference table
+  if (salt && tableMap[salt]) {
+    document.getElementById('brineTableTitle').textContent = nameMap[salt];
+    const body = document.getElementById('brineRefBody');
+    body.innerHTML = tableMap[salt].map(r =>
+      `<tr><td>${r[0]}%</td><td>${r[1].toFixed(2)}</td><td>${r[2].toFixed(3)}</td></tr>`
+    ).join('');
+  }
+
+  if (!salt || isNaN(conc)) { result.style.display = 'none'; return; }
+  const table = tableMap[salt];
+  const density = interpolate(table, conc, 0, 1);
+  const gradient = interpolate(table, conc, 0, 2);
+  if (!density) return;
+
+  result.style.display = 'block';
+  document.getElementById('br-density').textContent = density.toFixed(2);
+  document.getElementById('br-gradient').textContent = gradient.toFixed(3);
+
+  if (!isNaN(vol) && vol > 0) {
+    // Salt in lbm per bbl at concentration
+    const saltLbm = Math.round(vol * density * 42 * (conc/100) / (1 - conc/100) * 0.1); // approx
+    const waterGal = Math.round(vol * 42 * (1 - conc/100));
+    document.getElementById('br-salt').textContent = saltLbm;
+    document.getElementById('br-water').textContent = waterGal;
+    document.getElementById('br-breakdown').innerHTML = `
+      <div class="step"><span>Brine density at ${conc}%</span><span>${density.toFixed(2)} ppg</span></div>
+      <div class="step"><span>Hydrostatic gradient</span><span>${gradient.toFixed(3)} psi/ft</span></div>
+      <div class="step"><span>Target volume</span><span>${vol} bbl (${(vol*42).toFixed(0)} USG)</span></div>
+    `;
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// REFERENCE TABLES — BUILD ON LOAD
+// ══════════════════════════════════════════════════════
+function buildRefTables() {
+  // Tubing table
+  let tHtml = '<thead><tr><th>OD (in)</th><th>Conn.</th><th>Weight (lb/ft)</th><th>Grade</th><th>ID (in)</th><th>Capacity (bbl/ft)</th><th>Capacity (gal/ft)</th></tr></thead><tbody>';
+  TUBING.forEach((r) => {
+    // r = [OD, conn, weight, grade, ID, capBBL]
+    tHtml += `<tr><td>${r[0]}"</td><td><span class="grade-badge">${r[1]}</span></td><td>${r[2]}</td><td><span class="grade-badge">${r[3]}</span></td><td>${r[4]}"</td><td>${r[5].toFixed(5)}</td><td>${(r[5]*42).toFixed(4)}</td></tr>`;
+  });
+  tHtml += '</tbody>';
+  document.getElementById('tubingRefTable').innerHTML = tHtml;
+
+  // CT table
+  let ctHtml = '<thead><tr><th>OD (in)</th><th>Grade</th><th>Weight (lb/ft)</th><th>ID (in)</th><th>Capacity (bbl/ft)</th><th>Capacity (gal/ft)</th></tr></thead><tbody>';
+  CT_PIPE.forEach(r => {
+    ctHtml += `<tr><td>${r[0]}"</td><td><span class="grade-badge">${r[1]}</span></td><td>${r[2]}</td><td>${r[3]}"</td><td>${r[4].toFixed(5)}</td><td>${(r[4]*42).toFixed(4)}</td></tr>`;
+  });
+  ctHtml += '</tbody>';
+  document.getElementById('ctRefTable').innerHTML = ctHtml;
+
+  // Fluid table
+  const fluids = [
+    {name:'Fresh water', density:8.33},{name:'Seawater', density:8.55},
+    {name:'Diesel', density:7.00},{name:'Crude oil (30°API)', density:7.30},
+    {name:'NaCl brine (8%)', density:8.70},{name:'NaCl brine (15%)', density:9.30},
+    {name:'CaCl₂ brine (14%)', density:9.40},{name:'CaCl₂ brine (21%)', density:10.00},
+    {name:'CaCl₂ brine (32%)', density:11.00},{name:'CaCl₂ brine (42%)', density:12.00},
+    {name:'NH₄Cl 2%', density:8.38},{name:'NH₄Cl 4%', density:8.43},
+    {name:'KCl 2%', density:8.43},{name:'KCl 4%', density:8.53},
+    {name:'KCl 8%', density:8.75},{name:'10% HCl acid', density:8.70},
+    {name:'15% HCl acid', density:8.90},
+  ];
+  let fHtml = '<thead><tr><th>Fluid</th><th>Density (ppg)</th><th>Gradient (psi/ft)</th><th>Specific gravity</th></tr></thead><tbody>';
+  fluids.forEach(f => {
+    fHtml += `<tr><td>${f.name}</td><td>${f.density.toFixed(2)}</td><td>${(0.052*f.density).toFixed(4)}</td><td>${(f.density/8.337).toFixed(3)}</td></tr>`;
+  });
+  fHtml += '</tbody>';
+  document.getElementById('fluidRefTable').innerHTML = fHtml;
+}
+
+function resetAll() {
+  document.querySelectorAll('input').forEach(i => i.value = '');
+  document.querySelectorAll('select').forEach(s => s.selectedIndex = 0);
+  document.getElementById('concField').style.display = 'none';
+  document.getElementById('apiField').style.display = 'none';
+  document.getElementById('resultsCard').style.display = 'none';
+  document.getElementById('alertBox').innerHTML = '';
+  document.getElementById('summaryBox').innerHTML = '<span class="summary-empty">No calculation run yet. Complete inputs in the Calculator tab and press Calculate.</span>';
+  lastResults = null;
+}
+
+function exportPDF() {
+  const text = document.getElementById('summaryBox').innerText || document.getElementById('summaryBox').textContent;
+  if (text.includes('No calculation')) {
+    alert('Please run a calculation first before exporting.');
+    return;
+  }
+  const printWin = window.open('', '_blank');
+  printWin.document.write(`<!DOCTYPE html><html><head>
+    <meta charset="UTF-8">
+    <title>CT N2 Lift Design Summary</title>
+    <style>
+      body { font-family: 'Courier New', monospace; font-size: 12px; line-height: 1.8;
+             color: #000; background: #fff; padding: 40px; max-width: 800px; margin: 0 auto; }
+      h2 { font-family: Arial, sans-serif; font-size: 16px; font-weight: bold;
+           border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 20px; }
+      pre { white-space: pre-wrap; word-wrap: break-word; font-size: 12px; line-height: 1.9; }
+      .footer { margin-top: 40px; border-top: 1px solid #ccc; padding-top: 12px;
+                font-size: 10px; color: #666; font-family: Arial, sans-serif; }
+      @media print {
+        body { padding: 20px; }
+        @page { margin: 20mm; }
+      }
+    </style>
+  </head><body>
+    <pre>${text}</pre>
+    <div class="footer">CT N₂ Lift Design Tool v1.0 — Designed by Tolase Adeleke — Data: i-Handbook</div>
+    <script>window.onload = function(){ window.print(); }<\/script>
+  </body></html>`);
+  printWin.document.close();
+}
+
+// INIT
+buildRefTables();
+</script>
+</body>
+</html>
